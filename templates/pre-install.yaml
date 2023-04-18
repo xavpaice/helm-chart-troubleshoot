@@ -13,7 +13,7 @@ metadata:
     "helm.sh/hook": pre-install, pre-upgrade
     "helm.sh/show-output": "true"
     "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": hook-succeeded, hook-failed, before-hook-creation
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
 spec:
   backoffLimit: 0  # do not retry on failure
   template:
@@ -32,7 +32,7 @@ spec:
       containers:
       - name: pre-install-job
         image: "{{ .Values.preflight.image }}"
-        command: ["preflight", "--interactive=false", "--format json",  "/preflights/preflight.yaml"]
+        command: ["preflight", "--interactive=false",  "/preflights/preflight.yaml"]
         volumeMounts:
         - name: preflights
           mountPath: /preflights
@@ -43,7 +43,7 @@ metadata:
   annotations:
     "helm.sh/hook": pre-install, pre-upgrade
     "helm.sh/hook-weight": "-6"
-    "helm.sh/hook-delete-policy": hook-succeeded, hook-failed, before-hook-creation
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
@@ -51,5 +51,5 @@ metadata:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
   name: "{{ .Release.Name }}-preflight-config"
 data:
-  preflights.yaml: |
+  preflight.yaml: |-
 {{ include "preflight.spec" . | indent 4 }}

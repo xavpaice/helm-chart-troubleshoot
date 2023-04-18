@@ -4,21 +4,21 @@ kind: Preflight
 metadata:
   name: preflight-tutorial
 spec:
+  {{ if eq .Values.global.mariadb.enabled false }}
   collectors:
-    {{ if eq .Values.global.mariadb.enabled false }}
-    - mysql:
+      - mysql:
         collectorName: mysql
         uri: '{{ .Values.global.externalDatabase.user }}:{{ .Values.global.externalDatabase.password }}@tcp({{ .Values.global.externalDatabase.host }}:{{ .Values.global.externalDatabase.port }})/{{ .Values.global.externalDatabase.database }}?tls=false'
-    {{ end }}
+  {{ end }}
   analyzers:
-   - nodeResources:
-       checkName: Node Count Check
-       outcomes:
-         - fail:
-             when: 'count() > 3'
-             message: The cluster has more nodes than the 3 you are licensed for.
-         - pass:
-             message: The number of nodes matches your license (3)
+    - nodeResources:
+        checkName: Node Count Check
+        outcomes:
+          - fail:
+              when: 'count() > 3'
+              message: The cluster has more nodes than the 3 you are licensed for.
+          - pass:
+              message: The number of nodes matches your license (3)
     - clusterVersion:
         outcomes:
           - fail:
