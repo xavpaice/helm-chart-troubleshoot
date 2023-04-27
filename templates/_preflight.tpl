@@ -2,7 +2,7 @@
 apiVersion: troubleshoot.sh/v1beta2
 kind: Preflight
 metadata:
-  name: preflight-tutorial
+  name: preflight-sample
 spec:
   {{ if eq .Values.global.mariadb.enabled false }}
   collectors:
@@ -18,7 +18,7 @@ spec:
               when: 'count() > 3'
               message: The cluster has more nodes than the 3 you are licensed for.
           - pass:
-              message: The number of nodes matches your license (3)
+              message: The number of nodes does not exceed your license (3)
     - clusterVersion:
         outcomes:
           - fail:
