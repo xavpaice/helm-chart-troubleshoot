@@ -15,10 +15,10 @@ spec:
         checkName: Node Count Check
         outcomes:
           - fail:
-              when: 'count() > 3'
-              message: The cluster has more nodes than the 3 you are licensed for.
+              when: 'count() < 3'
+              message: The cluster needs a minimum of 3 nodes.
           - pass:
-              message: The number of nodes does not exceed your license (3)
+              message: There are enough nodes to run this application (3 or more)
     - clusterVersion:
         outcomes:
           - fail:
