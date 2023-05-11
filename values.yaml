@@ -8,3 +8,4 @@ preflight:
 global:
   mariadb:
     enabled: true
+  maxNodeCount: 3

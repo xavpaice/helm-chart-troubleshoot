@@ -1,7 +1,7 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: v1
+kind: Pod
 metadata:
-  name: "{{ .Release.Name }}-preflight-job"
+  name: "{{ .Release.Name }}-preflight-check"
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
@@ -16,40 +16,29 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
     "helm.sh/hook-output-log-policy": hook-failed, hook-succeeded
 spec:
-  backoffLimit: 0  # do not retry on failure
-  template:
-    metadata:
-      name: "{{ .Release.Name }}-preflight"
-      labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
-        app.kubernetes.io/instance: {{ .Release.Name | quote }}
-        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    spec:
-      serviceAccountName: "{{ .Release.Name }}-preflight"
-      restartPolicy: Never
-      volumes:
-        - name: preflights
-          secret:
-            secretName: "{{ .Release.Name }}-preflight-config"
-        - name: kube-api-token
-          projected:
-            defaultMode: 420
-            sources:
-              - serviceAccountToken:
-                  expirationSeconds: 3607
-                  path: token
-      containers:
-      - name: pre-install-job
-        image: "{{ .Values.preflight.image }}"
-        command:
-          - "bash"
-          - "-c"
-          - "preflight --interactive=false /preflights/preflight.yaml | tee result ; grep -q FAIL result && exit 1 || exit 0"
-          #- "--interactive=false"
-          #- "/preflights/preflight.yaml"
-        volumeMounts:
-        - name: preflights
-          mountPath: /preflights
+  serviceAccountName: "{{ .Release.Name }}-preflight"
+  restartPolicy: Never
+  volumes:
+    - name: preflights
+      secret:
+        secretName: "{{ .Release.Name }}-preflight-config"
+    - name: kube-api-token
+      projected:
+        defaultMode: 420
+        sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+  containers:
+    - name: pre-install-job
+      image: "{{ .Values.preflight.image }}"
+      command:
+        - "preflight"
+        - "--interactive=false"
+        - "/preflights/preflight.yaml"
+      volumeMounts:
+      - name: preflights
+        mountPath: /preflights
 ---
 apiVersion: v1
 kind: Secret
@@ -63,9 +52,11 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    troubleshoot.io/kind: preflight
   name: "{{ .Release.Name }}-preflight-config"
-data:
-  preflight.yaml: {{ include "preflight.spec"  . | b64enc }}
+stringData:
+  preflight.yaml: |
+{{- include "preflight.spec"  . | indent 4 }}
 
 ---
 apiVersion: v1

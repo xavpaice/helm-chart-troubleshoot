@@ -15,10 +15,10 @@ spec:
         checkName: Node Count Check
         outcomes:
           - fail:
-              when: 'count() < 3'
-              message: The cluster needs a minimum of 3 nodes.
+              when: 'count() > {{ .Values.global.maxNodeCount }}'
+              message: "The cluster has more than {{ .Values.global.maxNodeCount }} nodes."
           - pass:
-              message: There are enough nodes to run this application (3 or more)
+              message: You have the correct number of nodes.
     - clusterVersion:
         outcomes:
           - fail:
